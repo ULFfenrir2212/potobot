@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bakugan MX</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #000;
+      color: #fff;
+    }
+
+    .fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero {
+      background-image: url('A_digital_illustration_features_a_skeleton_mariach.png');
+      background-size: cover;
+      background-position: center;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(to bottom right, rgba(255, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .hero p {
+      font-size: 1.5rem;
+      margin-top: 10px;
+      color: #eee;
+    }
+
+    section {
+      padding: 40px 20px;
+    }
+
+    form {
+      max-width: 600px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background-color: #111;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    input, textarea, select {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    input[type="submit"] {
+      background-color: red;
+      color: white;
+      cursor: pointer;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    .publicacion {
+      border: 1px solid #333;
+      padding: 15px;
+      margin: 15px auto;
+      border-radius: 10px;
+      background-color: #111;
+      max-width: 600px;
+    }
+
+    .publicacion img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle, #ff0, #f00, transparent);
+      opacity: 0;
+      transform: translateX(-50%) scale(1);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    button.fire::after {
+      animation: flame 0.6s ease-out;
+    }
+
+    @keyframes flame {
+      0% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translateX(-50%) translateY(-20px) scale(1.5);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateX(-50%) translateY(-40px) scale(0.2);
+        opacity: 0;
+      }
+    }
+
+    #venta, #compra {
+      display: none;
+    }
+
+    #inicio, #menuOpciones {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="overlay"></div>
+    <div class="hero-content">
+      <h1>Bakugan MX</h1>
+      <p>¡Activa tu esfera! Colecciona y combate con estilo.</p>
+
+      <div id="inicio" class="fade-in">
+        <button onclick="animar(this); mostrarMenu()">Empezar</button>
+      </div>
+
+      <div id="menuOpciones" style="display: none;" class="fade-in">
+        <button onclick="animar(this); mostrarSeccion('venta')">Publicar Bakugan</button>
+        <button onclick="animar(this); mostrarSeccion('compra')">Comprar Bakugan</button>
+        <button onclick="animar(this); abrirFacebook()">Facebook</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="venta">
+    <h2>Publicar tu Bakugan</h2>
+    <form id="formVenta">
+      <label>Nombre del Vendedor:</label>
+      <input type="text" id="nombreVendedor" required>
+
+      <label>Foto del Vendedor:</label>
+      <input type="file" id="fotoVendedor" accept="image/*" required>
+
+      <label>Nombre del Bakugan:</label>
+      <input type="text" id="nombreBakugan" required>
+
+      <label>Atributo del Bakugan:</label>
+      <select id="atributo" required>
+        <option value="">Selecciona un atributo</option>
+        <option value="Pyrus">Pyrus</option>
+        <option value="Aquos">Aquos</option>
+        <option value="Ventus">Ventus</option>
+        <option value="Haos">Haos</option>
+        <option value="Darkus">Darkus</option>
+        <option value="Subterra">Subterra</option>
+      </select>
+
+      <label>Precio:</label>
+      <input type="number" id="precio" required>
+
+      <label>Detalle:</label>
+      <textarea id="detalle" rows="4" required></textarea>
+
+      <label>¿De dónde es el vendedor?</label>
+      <input type="text" id="origen" required>
+
+      <label>Foto del Bakugan:</label>
+      <input type="file" id="fotoBakugan" accept="image/*" required>
+
+      <input type="submit" value="Publicar Bakugan">
+    </form>
+  </section>
+
+  <section id="compra">
+    <h2>Compra Bakugan</h2>
+    <div id="listaPublicaciones"></div>
+  </section>
+
+  <script>
+    const form = document.getElementById('formVenta');
+    const listaPublicaciones = document.getElementById('listaPublicaciones');
+
+    function guardarPublicacion(data) {
+      const publicaciones = JSON.parse(localStorage.getItem('publicaciones')) || [];
+      publicaciones.push(data);
+      localStorage.setItem('publicaciones', JSON.stringify(publicaciones));
+    }
+
+    function mostrarPublicaciones() {
+      listaPublicaciones.innerHTML = '';
+      const publicaciones = JSON.parse(localStorage.getItem('publicaciones')) || [];
+      publicaciones.forEach(pub => {
+        const div = document.createElement('div');
+        div.className = 'publicacion fade-in';
+        div.innerHTML = `
+          <h3>${pub.nombreBakugan} (${pub.atributo}) - $${pub.precio}</h3>
+          <p><strong>Detalles:</strong> ${pub.detalle}</p>
+          <p><strong>Vendedor:</strong> ${pub.nombreVendedor} - ${pub.origen}</p>
+          <img src="${pub.fotoVendedor}" alt="Vendedor">
+          <img src="${pub.fotoBakugan}" alt="Bakugan">
+        `;
+        listaPublicaciones.appendChild(div);
+      });
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const nombreVendedor = document.getElementById('nombreVendedor').value;
+      const origen = document.getElementById('origen').value;
+      const nombreBakugan = document.getElementById('nombreBakugan').value;
+      const atributo = document.getElementById('atributo').value;
+      const precio = document.getElementById('precio').value;
+      const detalle = document.getElementById('detalle').value;
+      const fotoVendedor = document.getElementById('fotoVendedor').files[0];
+      const fotoBakugan = document.getElementById('fotoBakugan').files[0];
+
+      const readerVendedor = new FileReader();
+      const readerBakugan = new FileReader();
+
+      readerVendedor.onload = function () {
+        const fotoVendedorURL = readerVendedor.result;
+
+        readerBakugan.onload = function () {
+          const fotoBakuganURL = readerBakugan.result;
+
+          const publicacion = {
+            nombreVendedor,
+            origen,
+            nombreBakugan,
+            atributo,
+            precio,
+            detalle,
+            fotoVendedor: fotoVendedorURL,
+            fotoBakugan: fotoBakuganURL
+          };
+
+          guardarPublicacion(publicacion);
+          mostrarPublicaciones();
+          form.reset();
+        };
+
+        readerBakugan.readAsDataURL(fotoBakugan);
+      };
+
+      readerVendedor.readAsDataURL(fotoVendedor);
+    });
+
+    function mostrarMenu() {
+      document.getElementById('inicio').style.display = 'none';
+      document.getElementById('menuOpciones').style.display = 'block';
+    }
+
+    function mostrarSeccion(seccion) {
+      document.getElementById('venta').style.display = 'none';
+      document.getElementById('compra').style.display = 'none';
+
+      const seccionMostrar = document.getElementById(seccion);
+      seccionMostrar.style.display = 'block';
+      seccionMostrar.classList.add('fade-in');
+    }
+
+    function animar(btn) {
+      btn.classList.add('fire');
+      setTimeout(() => btn.classList.remove('fire'), 600);
+    }
+
+    function abrirFacebook() {
+      window.open("https://www.facebook.com/groups/469300127728809/?ref=share&mibextid=NSMWBT", "_blank");
+    }
+
+    window.onload = mostrarPublicaciones;
+  </script>
+
+</body>
+</html>
