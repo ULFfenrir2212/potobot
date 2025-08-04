@@ -6,6 +6,7 @@
   <title>Potobot Auditor</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -76,7 +77,10 @@
 
   <input type="file" id="excelInput" accept=".xlsx" />
   <button onclick="openCamera()">📷 Escanear guía</button>
-  <button onclick="downloadFaltantes()">⬇️ Descargar faltantes</button>
+  <button onclick="document.getElementById('imageInput').click()">🖼️ Agregar foto de galería</button>
+  <button onclick="downloadZIP()">⬇️ Descargar faltantes ZIP</button>
+
+  <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)" />
 
   <div id="scanner">
     <video id="video" autoplay></video>
@@ -88,6 +92,7 @@
   <script>
     let workbookData = [];
     let faltantes = [];
+    let faltantesImagenes = {};
 
     document.getElementById('excelInput').addEventListener('change', e => {
       const file = e.target.files[0];
@@ -121,7 +126,7 @@
       document.getElementById('messageInput').value = '';
     }
 
-    function searchGuide(guia) {
+    function searchGuide(guia, imagenBase64) {
       const resultado = workbookData.find(row => row['Guía'] == guia);
       if (resultado) {
         let info = `✅ Guía encontrada: ${guia}\n`;
@@ -131,36 +136,52 @@
         appendToChat(info);
       } else {
         appendToChat('❌ Guía no encontrada: ' + guia);
-        faltantes.push({ Guía: guia, Fecha: new Date().toLocaleString() });
+        const entrada = { Guía: guia, Fecha: new Date().toLocaleString() };
+        faltantes.push(entrada);
+        if (imagenBase64) faltantesImagenes[guia] = imagenBase64;
       }
     }
 
-    function downloadFaltantes() {
+    function downloadZIP() {
       if (faltantes.length === 0) {
         alert('No hay guías faltantes para descargar.');
         return;
       }
-      const wb = XLSX.utils.book_new();
+      const zip = new JSZip();
       const ws = XLSX.utils.json_to_sheet(faltantes);
+      const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Faltantes');
-      XLSX.writeFile(wb, 'faltantes.xlsx');
+      const excelData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      zip.file("faltantes.xlsx", excelData);
+      for (const guia in faltantesImagenes) {
+        const base64 = faltantesImagenes[guia].split(',')[1];
+        zip.file("imagenes/" + guia + ".png", base64, {base64: true});
+      }
+      zip.generateAsync({type: "blob"}).then(content => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(content);
+        a.download = "faltantes.zip";
+        a.click();
+      });
     }
 
-    // Cámara y escaneo
     let video = document.getElementById('video');
     let canvas = document.getElementById('canvas');
 
     async function openCamera() {
       document.getElementById('scanner').style.display = 'flex';
+      const constraints = {
+        video: {
+          facingMode: { exact: 'environment' }
+        }
+      };
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" } }
-        });
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
-      } catch (err) {
-        appendToChat('⚠️ No se pudo acceder a la cámara trasera. Usando cámara predeterminada...');
-        const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = fallbackStream;
+      } catch (error) {
+        alert("No se pudo acceder a la cámara trasera, usando la predeterminada");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
       }
     }
 
@@ -170,14 +191,35 @@
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
+      const base64 = canvas.toDataURL('image/png');
+      recognizeGuide(canvas, base64);
+    }
 
-      Tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) })
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          recognizeGuide(canvas, e.target.result);
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function recognizeGuide(canvasEl, base64Img) {
+      document.getElementById('loading').style.display = 'block';
+      Tesseract.recognize(canvasEl, 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
           document.getElementById('loading').style.display = 'none';
           const match = text.match(/\d{10,}/);
           if (match) {
             appendToChat('📸 Guía escaneada: ' + match[0]);
-            searchGuide(match[0]);
+            searchGuide(match[0], base64Img);
           } else {
             appendToChat('❌ No se detectó una guía válida en la imagen.');
           }
@@ -186,3 +228,5 @@
   </script>
 </body>
 </html>
+
+
